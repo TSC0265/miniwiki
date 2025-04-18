@@ -8,6 +8,7 @@
   <style>
     body {
       position: relative;
+
       font-family: sans-serif;
       padding: 2rem;
       max-width: 768px;
@@ -33,29 +34,12 @@
       margin-bottom: 1rem;
       cursor: pointer;
       transition: background-color 0.2s;
-      position: relative;
     }
     .card:hover {
       background-color: #f0f0f0;
     }
     body.dark .card:hover {
       background-color: #1e1e1e;
-    }
-    .delete-doc-button {
-      position: absolute;
-      top: 0.5rem;
-      right: 0.5rem;
-      background: #ef4444;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      padding: 0.2rem 0.5rem;
-      font-size: 0.75rem;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .delete-doc-button:hover {
-      background: #dc2626;
     }
     .back-button {
       color: #3b82f6;
@@ -139,41 +123,18 @@
       border-top: 1px solid #eee;
       padding: 0.5rem 0;
       font-size: 0.95rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .delete-comment {
-      font-size: 0.75rem;
-      padding: 0.2rem 0.5rem;
-      margin-left: 0.5rem;
-      background: #ef4444;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .delete-comment:hover {
-      background: #dc2626;
-    }
-    .comment-time {
-      font-size: 0.75rem;
-      color: #888;
-      margin-left: 0.5rem;
-    }
-    .comment-author {
-      font-size: 0.8rem;
-      font-weight: bold;
-      margin-right: 0.5rem;
-      color: #555;
     }
     .ranking-box {
-      margin-top: 1rem;
+  margin-top: 1rem;
       background: #f3f4f6;
       border: 1px solid #ddd;
       padding: 1rem;
       margin-bottom: 2rem;
       border-radius: 8px;
+    }
+    .layout {
+      display: flex;
+      flex-direction: column;
     }
     @media (min-width: 768px) {
       .layout {
@@ -182,20 +143,52 @@
         align-items: flex-start;
       }
       .ranking-box {
-        background: #f3f4f6;
-        border: 1px solid #ddd;
-        padding: 1rem;
-        margin-bottom: 2rem;
-        border-radius: 8px;
-        width: 260px;
-        max-height: 600px;
-        overflow-y: auto;
-      }
+      background: #f3f4f6;
+      border: 1px solid #ddd;
+      padding: 1rem;
+      margin-bottom: 2rem;
+      border-radius: 8px;
+      width: 260px;
+      max-height: 600px;
+      overflow-y: auto;
+    }
       #mainContent {
         flex: 1;
       }
     }
-  </style>
+    .comment {
+    border-top: 1px solid #eee;
+    padding: 0.5rem 0;
+    font-size: 0.95rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .delete-comment {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.5rem;
+    margin-left: 0.5rem;
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .delete-comment:hover {
+    background: #dc2626;
+  }
+  .comment-time {
+    font-size: 0.75rem;
+    color: #888;
+    margin-left: 0.5rem;
+  }
+  .comment-author {
+    font-size: 0.8rem;
+    font-weight: bold;
+    margin-right: 0.5rem;
+    color: #555;
+  }
+</style>
 </head>
 <body>
   <h1>📚 미니위키 <span class="dark-toggle" id="toggleTheme">🌙 다크 모드</span></h1>
@@ -228,7 +221,7 @@
       </div>
     </div>
 
-    <div class="ranking-box" style="position: relative; bottom: 0;">
+    <div class="ranking-box" style="position: relative; bottom: 0; margin-top: 2rem;">
       <h3>📈 실시간 검색 순위</h3>
       <ol id="rankingList">
         <li>불러오는 중...</li>
@@ -253,12 +246,6 @@
       localStorage.setItem("documents", JSON.stringify(documents));
     }
 
-    function deleteDocument(docId) {
-      documents = documents.filter(doc => doc.id !== docId);
-      saveDocuments();
-      renderList();
-    }
-
     function renderList(filtered = documents) {
       docList.innerHTML = "";
       if (filtered.length === 0) {
@@ -268,20 +255,7 @@
       filtered.forEach(doc => {
         const card = document.createElement("div");
         card.className = "card";
-
-        const title = document.createElement("span");
-        title.textContent = doc.title;
-        card.appendChild(title);
-
-        const deleteBtn = document.createElement("button");
-        deleteBtn.textContent = "삭제";
-        deleteBtn.className = "delete-doc-button";
-        deleteBtn.addEventListener("click", e => {
-          e.stopPropagation();
-          if (confirm(`${doc.title} 문서를 삭제하시겠습니까?`)) deleteDocument(doc.id);
-        });
-        card.appendChild(deleteBtn);
-
+        card.textContent = doc.title;
         card.addEventListener("click", () => showDoc(doc));
         docList.appendChild(card);
       });
@@ -333,7 +307,7 @@
         commentList.parentElement.insertBefore(sortControls, commentList);
       }
       document.getElementById("commentSort").value = localStorage.getItem("commentSort") || "newest";
-      document.getElementById("commentSort").addEventListener("change", e => {
+      document.getElementById("commentSort").addEventListener("change", (e) => {
         localStorage.setItem("commentSort", e.target.value);
         showDoc(doc);
       });
@@ -351,7 +325,8 @@
       document.getElementById("docList").classList.add("hidden");
       view.classList.remove("hidden");
 
-      commentList.addEventListener("click", function(e) {
+      // 댓글 삭제 이벤트 위임
+      commentList.addEventListener("click", function (e) {
         if (e.target.classList.contains("delete-comment")) {
           const idx = parseInt(e.target.dataset.index);
           if (!isNaN(idx)) {
@@ -360,7 +335,7 @@
               ...JSON.parse(localStorage.getItem("comments") || '{}'),
               [doc.id]: comments
             }));
-            showDoc(doc);
+            showDoc(doc); // 다시 렌더링
           }
         }
       });
@@ -399,7 +374,7 @@
       } catch (error) {
         console.warn("실시간 순위 API를 사용할 수 없습니다. 기본값을 사용합니다.");
         rankingList.innerHTML = "";
-        fallbackRankings.forEach(item => {
+        fallbackRankings.forEach((item) => {
           const li = document.createElement("li");
           li.textContent = item;
           li.addEventListener("click", () => {
